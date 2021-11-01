@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TASK</title>
+    <style type="text/css">
+      /* @import url(style.css); */
+      body {
+        margin: 0 auto;
+      }
+      .container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      .navigation {
+        height: 100px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .navigation .text {
+        font-size: 40px;
+        font-weight: 400;
+      }
+      section {
+        margin-top: 10px;
+        display: flex;
+        width: 100%;
+      }
+      .side {
+        width: 15%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .side .text {
+        margin: 10px;
+        width: 100%;
+        text-align: center;
+      }
+      .main {
+        display: flex;
+        width: 70%;
+        justify-content: center;
+        align-items: center;
+        padding-top: 50px;
+      }
+      .main .todoContainer {
+        border: 1px solid #ddd;
+        width: 70%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 500px;
+        background-color: mediumturquoise;
+      }
+      .todoContainer .todo {
+        display: flex;
+        background-color: white;
+        width: 97%;
+        height: 96%;
+        box-shadow: 1px 1px 5px black;
+        flex-direction: column;
+        align-items: center;
+      }
+      .todo .todoHeader {
+        text-align: center;
+        font-size: 30px;
+        width: 100%;
+        margin: 15px;
+        color: blue;
+        font-weight: bold;
+      }
+      .todo .todoInputBox {
+        display: flex;
+        width: 100%;
+        justify-content: center;
+        margin: 10px;
+      }
+      .todoInputBox input {
+        outline: none;
+        border: 1px solid #ddd;
+        width: 90%;
+        padding: 15px;
+      }
+      .todo .todoItems {
+        overflow-y: scroll;
+        width: 90%;
+        margin: 10px;
+      }
+      .todoItems ul {
+        list-style: none;
+        padding: 0;
+      }
+      .todoItems ul li {
+        border-bottom: 1px solid #ddd;
+        width: 100%;
+      }
+
+      button {
+        margin: 10px;
+        outline: none;
+        background: white;
+        border: 1px solid skyblue;
+      }
+      button:active {
+        background: skyblue;
+        color: white;
+      }
+
+      .moreBox {
+        width: 70%;
+        margin: 10px;
+        height: 100px;
+        padding: 20px;
+      }
+
+      .submit {
+        background: white;
+        border: 5px solid skyblue;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .submit:active {
+        background: skyblue;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="navigation">
+        <p class="text">네비게이션</p>
+      </div>
+      <section>
+        <div class="side">
+          <p class="text">사이드메뉴</p>
+          <p class="text">사이드메뉴</p>
+          <p class="text">사이드메뉴</p>
+          <p class="text">사이드메뉴</p>
+        </div>
+        <div class="main" style="display: flex; flex-direction: column">
+          <div class="todoContainer">
+            <div class="todo">
+              <div class="todoHeader">My Todo</div>
+              <div class="todoInputBox">
+                <input
+                  type="text"
+                  placeholder="Input task name then tap Enter to add"
+                  id="addInput"
+                  onkeyup="if(window.event.keyCode === 13){addItem()}"
+                  maxlength="60"
+                  disabled
+                />
+              </div>
+              <div class="todoItems">
+                <ul id="List"></ul>
+              </div>
+            </div>
+          </div>
+          <div class="moreBox">
+            <button class="submit" id="moreButton" onclick="moreText(page)">
+              MORE
+            </button>
+            <button onclick="localStorage.clear()">Clear</button> 로컬 스토리지
+            지우고 다시 확인하는 용도로 썼음.
+          </div>
+        </div>
+        <div class="side"></div>
+      </section>
+    </div>
+  </body>
+  <!-- <script type="text/javascript" src="./index.js"></script> -->
+  <script>
+    let page = 1;
+    const posts = [];
+    const Button = document.getElementById("moreButton");
+    const Ul = document.querySelector("#List");
+    let checkItem = "";
+
+    const temp = localStorage.getItem(`todos`);
+    const todos = JSON.parse(temp);
+
+    window.onload = () => {
+      dataCall();
+    };
+
+    const dataCall = () => {
+      fetch(
+        `https://my-json-server.typicode.com/arahansa/todojsmockdata/${page}`
+      )
+        .then((res) => res.json())
+        .then((data) => dataSet(data))
+        .catch((err) => {
+          location.reload();
+          console.error(err);
+        });
+    };
+
+    const dataSet = (data) => {
+      const addInput = document.getElementById("addInput");
+      if (data.length) {
+        data.forEach((item) => {
+          posts.push(item);
+        });
+      } else {
+        localStorage.setItem("todos", JSON.stringify(posts));
+        Button.style.display = "none";
+        addInput.disabled = false;
+      }
+      if (localStorage.length > 0) {
+        dataView(todos);
+        Button.style.display = "none";
+        addInput.disabled = false;
+      } else {
+        dataView(posts);
+      }
+    };
+    const buttonActive = (button) => {
+      if (localStorage.length > 0) {
+        button.disabled = false;
+      }
+    };
+    const dataView = (type) => {
+      const createForm = (item) => {
+        const List = document.createElement("li");
+        const title = document.createElement("span");
+        const checkBox = document.createElement("input");
+        const deleteButton = document.createElement("button");
+        title.textContent = item.title;
+        checkBox.setAttribute("type", "checkbox");
+        checkBox.id = item.id;
+        checkBox.checked = false;
+        checkBox.name = "todo";
+        checkBox.setAttribute("onclick", "checkItems(event)");
+        deleteButton.value = item.id;
+        deleteButton.innerText = "delete";
+        deleteButton.setAttribute("onclick", "deleteItems(event)");
+        deleteButton.disabled = true;
+        Ul.appendChild(List);
+        List.appendChild(checkBox);
+        List.appendChild(title);
+        List.appendChild(deleteButton);
+        buttonActive(deleteButton);
+      };
+      type.forEach((item) => {
+        createForm(item);
+      });
+    };
+
+    const moreText = () => {
+      page++;
+      dataCall();
+    };
+
+    const addItem = () => {
+      const addItemInput = document.getElementById("addInput");
+      const addPosts = [];
+      if (!addInput.value) {
+        alert("Please enter the contents");
+      } else {
+        try {
+          todos.forEach((item) => {
+            addPosts.push(item);
+          });
+          let len = addPosts.length;
+          len += 1;
+          const inputForm = {
+            userId: 4,
+            id: len,
+            title: addItemInput.value,
+            completed: true,
+          };
+          addPosts.push(inputForm);
+          localStorage.setItem(`todos`, JSON.stringify(addPosts));
+          addItemInput.value = "";
+          location.reload();
+        } catch (err) {
+          location.reload();
+        }
+      }
+    };
+
+    const deleteItems = (event) => {
+      const deletePosts = [];
+
+      todos.forEach((item) => {
+        deletePosts.push(item);
+      });
+      if (checkItem === event.target.value) {
+        const search = deletePosts.findIndex((item) => {
+          if (item.id === Number(checkItem)) {
+            return item.id;
+          }
+        });
+        deletePosts.forEach((item) => {
+          if (item.id === Number(checkItem)) {
+            deletePosts.splice(search, 1);
+          }
+        });
+        localStorage.setItem(`todos`, JSON.stringify(deletePosts));
+        location.reload();
+      }
+    };
+
+    const checkItems = (event) => {
+      const item = document.getElementsByName("todo");
+      item.forEach((i) => {
+        i.checked = false;
+      });
+
+      event.target.checked = true;
+      checkItem = event.target.id;
+      console.log(checkItem);
+    };
+  </script>
+</html>
